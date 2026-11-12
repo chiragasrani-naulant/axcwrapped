@@ -353,12 +353,14 @@ function musFallback(){ /* if the browser refuses the embedded data, retry from 
     a.src=URL.createObjectURL(new Blob([u],{type:"audio/mpeg"})); a.load(); if(want) startSong();
   }catch(e){ mus.hidden=true; } }
 mus.addEventListener("click",e=>{ e.stopPropagation(); auto=true; want?stopSong():startSong(); });
+/* autoplay the moment the page opens. Browsers refuse sound until the first touch/click/key,
+   so if it is blocked, the song starts on the very first one (retried on every gesture until it plays) */
 const firstTap=e=>{ if(auto) return;
   if(e.type==="keydown"&&![" ","ArrowRight","ArrowLeft","Enter"].includes(e.key)) return;
-  if(e.target.closest&&e.target.closest("#mus")) return;
-  auto=true; startSong(); };
-["pointerdown","keydown"].forEach(t=>document.addEventListener(t,firstTap,{capture:true}));
-document.addEventListener("DOMContentLoaded",()=>{ const a=song(); if(a&&a.error) musFallback(); startSong().then(()=>{ if(want) auto=true; }); }); /* autoplay on open; if the browser blocks it, the first tap starts it */
+  if(e.target&&e.target.closest&&e.target.closest("#mus")) return;
+  startSong().then(()=>{ if(want) auto=true; }); };
+["pointerup","touchend","click","keydown"].forEach(t=>document.addEventListener(t,firstTap,{capture:true,passive:true}));
+document.addEventListener("DOMContentLoaded",()=>{ const a=song(); if(a&&a.error) musFallback(); startSong().then(()=>{ if(want) auto=true; }); });
 
 show(0);
 </script>
